@@ -3,6 +3,8 @@
 ## AI Usage
 <!-- Fill in at the end — how you used AI tools during this project -->
 
+I asked Claude to find every reference of save_to_watchlist() and when it mapped them I changed every reference to add_to_watchlist(). While choosing my position on question 4 I asked claude what were some tradebacks to my logic and it gave me back a list of tradebacks. From there I took the most logical/ significant tradeback and relayed it.
+
 ## Comment 1 — Rename
 **What I did:**  I asked Claude to find every reference of save_to_watchlist() and when it mapped them I changed every reference to add_to_watchlist().
 
@@ -35,3 +37,27 @@ I verified it by asking claude to check that save_to_watchlist() was no longer r
 **How I verified no conflict remains:** I hit git rebase --continue to see if any conflicts remained and from there I merged changes and sucessfully rebased.
 
 ## PR Description
+
+### feat: add watchlist feature
+
+**What this PR does:** This PR adds a watchlist feature so users can save films they want to watch later. I rebased my branch onto main after main switched film IDs from integers to UUIDs.
+
+**What I changed:**
+- I added two endpoints in routes/watchlist/watchlist.py and registered them in app.py. GET /watchlist/<user_id> returns a user's watchlist in alphabetical order, and POST /watchlist/<user_id>/add adds a film to it.
+- I renamed save_to_watchlist() to add_to_watchlist() and added the same deduplication logic the collection service uses, so adding the same film twice returns the entry that already exists instead of making a duplicate.
+- I added index=True to film_id in the WatchlistEntry model and kept the UUID change from main on the same line.
+- I changed Film.query.get() to db.session.get() in both the collection and watchlist services, since Film.query.get() is deprecated.
+- I added tests in test_watchlist.py for deduplication and for adding a film that doesn't exist.
+
+**Decisions from review:**
+- Sort order: I kept it alphabetical so users can still easily find films they added a long time ago. More on this in Comment 5.
+- Default visibility: I think public should default to False for privacy reasons, but I haven't changed it in this PR yet. More on this in Comment 4.
+
+**How I verified:** I ran the test suite and all 6 tests passed.
+
+**What still needs fixing:**
+- The add endpoint doesn't catch FilmNotFoundError, so adding a film that doesn't exist gives a 500 error instead of a 404.
+- The nonexistent film test still uses an integer ID (99999) when it should be using a UUID.
+- The route docstring still says film_id is an int.
+
+![alt text](image.png)
